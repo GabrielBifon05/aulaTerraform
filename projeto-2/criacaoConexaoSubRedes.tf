@@ -14,7 +14,7 @@ resource "aws_vpc" "vpc_labTerraform_sptech" {
 resource "aws_subnet" "sub_az1_pub_labTerraform_sptech" {
   vpc_id            = aws_vpc.vpc_labTerraform_sptech.id
   cidr_block        = "10.0.1.0/24"
-  //enable_resource_name_dns_a_record_on_launch =
+  enable_resource_name_dns_a_record_on_launch = true
   map_public_ip_on_launch = true
   availability_zone = "us-east-1a"
   tags = {
