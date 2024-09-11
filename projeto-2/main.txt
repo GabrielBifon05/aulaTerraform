@@ -1,0 +1,101 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.16"
+    }
+  }
+
+  required_version = ">= 1.2.0"
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_instance" "ec2-iac-aula2" {
+  ami = "ami-0e86e20dae9224db8"
+  instance_type = "t2.small"
+
+  tags={
+    Name = "ec2-iac-aula2"
+  }
+
+  ebs_block_device { //Bloco de armazenamento (disco)
+    device_name = "/dev/sda1"
+    volume_size = 30
+    volume_type = "gp3"
+  }
+
+  security_groups = [ aws_security_group.sg_aula_iac.name, "default" ] //para conseguir acessa no Browser
+
+  key_name = "aula_iac" //para além do Browser acessa na máquina tb
+
+
+  //assim é caso queira indicar uma subnet da AWS
+  //subnet_id = "subnet-028d0664544f17feb" //subnet padrão da região us-east-1
+
+  //assim é caso queira indicar uma subnet criada em arquivos .tf
+  subnet_id = aws_subnet.minha_subrede.id
+
+}
+
+variable "porta_http" {
+  description = "porta http"
+  default = 80
+  type = number
+}
+
+variable "porta_https" {
+  description = "porta http"
+  default = 443
+  type = number
+}
+
+resource "aws_security_group" "sg_aula_iac" {
+  name = "sg_aula_iac"
+
+  # entrada SSH do IPaws_security_group
+  # consultando os IPs das regiões:
+  # e http://ip-ranges.amazonaws.com/ip-ranges.json (é um Json bem grande)
+
+  ingress{
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress{
+    from_port = var.porta_http
+    to_port = var.porta_http
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress{
+    from_port = var.porta_http
+    to_port = var.porta_http
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress{
+    from_port = var.porta_https
+    to_port = var.porta_https
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress{
+    from_port = var.porta_https
+    to_port = var.porta_https
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_subnet" "minha_subrede" {
+  vpc_id = aws_vpc.vpc_labTerraform_sptech.id
+  cidr_block = "10.10.10.0/24"  
+}
